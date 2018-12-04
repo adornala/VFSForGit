@@ -3,9 +3,9 @@ using System.IO;
 
 namespace GVFS.Common
 {
-    public class NuGetPackageManifest
+    public class ReleaseManifest
     {
-        public NuGetPackageManifest()
+        public ReleaseManifest()
         {
             this.Properties = new Dictionary<string, string>();
         }

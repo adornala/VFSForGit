@@ -18,9 +18,9 @@ namespace GVFS.UnitTests.Windows.Upgrader
         public void UpgradeAvailableOnFastWhileOnLocalNoneRing()
         {
             this.SimulateUpgradeAvailable(
-                remoteRing: GitHubReleasesUpgrader.RingType.Fast,
+                remoteRing: GitHubUpgrader.GitHubUpgraderConfig.RingType.Fast,
                 remoteVersion: UpgradeTests.NewerThanLocalVersion,
-                localRing: GitHubReleasesUpgrader.RingType.None,
+                localRing: GitHubUpgrader.GitHubUpgraderConfig.RingType.None,
                 expectedReturn: true,
                 expectedUpgradeVersion: null);
         }
@@ -29,9 +29,9 @@ namespace GVFS.UnitTests.Windows.Upgrader
         public void UpgradeAvailableOnSlowWhileOnLocalNoneRing()
         {
             this.SimulateUpgradeAvailable(
-                remoteRing: GitHubReleasesUpgrader.RingType.Slow,
+                remoteRing: GitHubUpgrader.GitHubUpgraderConfig.RingType.Slow,
                 remoteVersion: UpgradeTests.NewerThanLocalVersion,
-                localRing: GitHubReleasesUpgrader.RingType.None,
+                localRing: GitHubUpgrader.GitHubUpgraderConfig.RingType.None,
                 expectedReturn: true,
                 expectedUpgradeVersion: null);
         }
@@ -40,9 +40,9 @@ namespace GVFS.UnitTests.Windows.Upgrader
         public void UpgradeAvailableOnFastWhileOnLocalSlowRing()
         {
             this.SimulateUpgradeAvailable(
-                remoteRing: GitHubReleasesUpgrader.RingType.Fast,
+                remoteRing: GitHubUpgrader.GitHubUpgraderConfig.RingType.Fast,
                 remoteVersion: UpgradeTests.NewerThanLocalVersion,
-                localRing: GitHubReleasesUpgrader.RingType.Slow,
+                localRing: GitHubUpgrader.GitHubUpgraderConfig.RingType.Slow,
                 expectedReturn: true,
                 expectedUpgradeVersion: null);
         }
@@ -51,9 +51,9 @@ namespace GVFS.UnitTests.Windows.Upgrader
         public void UpgradeAvailableOnSlowWhileOnLocalSlowRing()
         {
             this.SimulateUpgradeAvailable(
-                remoteRing: GitHubReleasesUpgrader.RingType.Slow,
+                remoteRing: GitHubUpgrader.GitHubUpgraderConfig.RingType.Slow,
                 remoteVersion: UpgradeTests.NewerThanLocalVersion,
-                localRing: GitHubReleasesUpgrader.RingType.Slow,
+                localRing: GitHubUpgrader.GitHubUpgraderConfig.RingType.Slow,
                 expectedReturn: true,
                 expectedUpgradeVersion: UpgradeTests.NewerThanLocalVersion);
         }
@@ -62,9 +62,9 @@ namespace GVFS.UnitTests.Windows.Upgrader
         public void UpgradeAvailableOnFastWhileOnLocalFastRing()
         {
             this.SimulateUpgradeAvailable(
-                remoteRing: GitHubReleasesUpgrader.RingType.Fast,
+                remoteRing: GitHubUpgrader.GitHubUpgraderConfig.RingType.Fast,
                 remoteVersion: UpgradeTests.NewerThanLocalVersion,
-                localRing: GitHubReleasesUpgrader.RingType.Fast,
+                localRing: GitHubUpgrader.GitHubUpgraderConfig.RingType.Fast,
                 expectedReturn: true,
                 expectedUpgradeVersion: UpgradeTests.NewerThanLocalVersion);
         }
@@ -73,9 +73,9 @@ namespace GVFS.UnitTests.Windows.Upgrader
         public void UpgradeAvailableOnSlowWhileOnLocalFastRing()
         {
             this.SimulateUpgradeAvailable(
-                remoteRing: GitHubReleasesUpgrader.RingType.Slow,
+                remoteRing: GitHubUpgrader.GitHubUpgraderConfig.RingType.Slow,
                 remoteVersion: UpgradeTests.NewerThanLocalVersion,
-                localRing:GitHubReleasesUpgrader.RingType.Fast,
+                localRing: GitHubUpgrader.GitHubUpgraderConfig.RingType.Fast,
                 expectedReturn: true,
                 expectedUpgradeVersion:UpgradeTests.NewerThanLocalVersion);
         }
@@ -101,9 +101,9 @@ namespace GVFS.UnitTests.Windows.Upgrader
         }
 
         private void SimulateUpgradeAvailable(
-            GitHubReleasesUpgrader.RingType remoteRing,
+            GitHubUpgrader.GitHubUpgraderConfig.RingType remoteRing,
             string remoteVersion,
-            GitHubReleasesUpgrader.RingType localRing,
+            GitHubUpgrader.GitHubUpgraderConfig.RingType localRing,
             bool expectedReturn,
             string expectedUpgradeVersion)
         {

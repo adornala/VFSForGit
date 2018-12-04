@@ -10,7 +10,7 @@ namespace GVFS.Upgrader
     {
         private const EventLevel DefaultEventLevel = EventLevel.Informational;
 
-        private ProductUpgraderBase upgrader;
+        private ProductUpgrader upgrader;
         private ITracer tracer;
         private InstallerPreRunChecker preRunChecker;
         private TextWriter output;
@@ -18,7 +18,7 @@ namespace GVFS.Upgrader
         private bool mount;
 
         public UpgradeOrchestrator(
-            ProductUpgraderBase upgrader,
+            ProductUpgrader upgrader,
             ITracer tracer,
             InstallerPreRunChecker preRunChecker,
             TextReader input,
@@ -48,7 +48,7 @@ namespace GVFS.Upgrader
             this.preRunChecker = new InstallerPreRunChecker(this.tracer, GVFSConstants.UpgradeVerbMessages.GVFSUpgradeConfirm);
 
             string errorMessage;
-            this.upgrader = ProductUpgraderBase.LoadUpgrader(GVFSPlatform.Instance.GitInstallation.GetInstalledGitBinPath(), this.tracer, out errorMessage);
+            this.upgrader = ProductUpgrader.CreateUpgrader(this.tracer, out errorMessage);
             this.output = Console.Out;
             this.input = Console.In;
             this.mount = false;
@@ -176,6 +176,27 @@ namespace GVFS.Upgrader
                 return false;
             }
 
+            string preInstaller;
+            Version preInstallerVersion;
+            if (this.upgrader.TryGetPreInstallerInfo(out preInstaller, out preInstallerVersion, out errorMessage))
+            {
+                if (!this.LaunchInsideSpinner(
+                () =>
+                {
+                    if (!this.TryRunPreInstaller(preInstaller, preInstallerVersion, out errorMessage))
+                    {
+                        return false;
+                    }
+
+                    return true;
+                },
+                $"Running \"{preInstaller}\": {preInstallerVersion}"))
+                {
+                    consoleError = errorMessage;
+                    return false;
+                }
+            }
+
             this.TryGetNewGitVersion(out newGitVersion, out errorMessage);
             if (!this.LaunchInsideSpinner(
                 () =>
@@ -209,6 +230,27 @@ namespace GVFS.Upgrader
 
                 consoleError = errorMessage;
                 return false;
+            }
+
+            string postInstaller;
+            Version postInstallerVersion;
+            if (this.upgrader.TryGetPostInstallerInfo(out postInstaller, out postInstallerVersion, out errorMessage))
+            {
+                if (!this.LaunchInsideSpinner(
+                () =>
+                {
+                    if (!this.TryRunPostInstaller(postInstaller, postInstallerVersion, out errorMessage))
+                    {
+                        return false;
+                    }
+
+                    return true;
+                },
+                $"Running \"{postInstaller}\": {postInstallerVersion}"))
+                {
+                    consoleError = errorMessage;
+                    return false;
+                }
             }
 
             this.LogVersionInfo(newGVFSVersion, newGitVersion, "Newly Installed Version");
@@ -326,6 +368,28 @@ namespace GVFS.Upgrader
             return true;
         }
 
+        private bool TryRunPreInstaller(string name, Version version, out string consoleError)
+        {
+            bool installSuccess = false;
+            using (ITracer activity = this.tracer.StartActivity(
+                $"{nameof(this.TryRunPreInstaller)}({version.ToString()})",
+                EventLevel.Informational))
+            {
+                if (!this.upgrader.TryRunPreInstaller(out installSuccess, out consoleError) ||
+                    !installSuccess)
+                {
+                    EventMetadata metadata = new EventMetadata();
+                    metadata.Add("Upgrade Step", nameof(this.TryRunPreInstaller));
+                    this.tracer.RelatedError(metadata, $"{nameof(this.upgrader.TryRunPreInstaller)} failed. {consoleError}");
+                    return false;
+                }
+
+                activity.RelatedInfo($"Successfully run \"{name}\": {version.ToString()}");
+            }
+
+            return installSuccess;
+        }
+
         private bool TryInstallGitUpgrade(GitVersion version, out string consoleError)
         {
             bool installSuccess = false;
@@ -365,6 +429,28 @@ namespace GVFS.Upgrader
                 }
 
                 activity.RelatedInfo("Successfully installed GVFS version: " + version.ToString());
+            }
+
+            return installSuccess;
+        }
+
+        private bool TryRunPostInstaller(string name, Version version, out string consoleError)
+        {
+            bool installSuccess = false;
+            using (ITracer activity = this.tracer.StartActivity(
+                $"{nameof(this.TryRunPostInstaller)}({version.ToString()})",
+                EventLevel.Informational))
+            {
+                if (!this.upgrader.TryRunPostInstaller(out installSuccess, out consoleError) ||
+                    !installSuccess)
+                {
+                    EventMetadata metadata = new EventMetadata();
+                    metadata.Add("Upgrade Step", nameof(this.TryRunPostInstaller));
+                    this.tracer.RelatedError(metadata, $"{nameof(this.upgrader.TryRunPostInstaller)} failed. {consoleError}");
+                    return false;
+                }
+
+                activity.RelatedInfo($"Successfully run \"{name}\": {version.ToString()}");
             }
 
             return installSuccess;

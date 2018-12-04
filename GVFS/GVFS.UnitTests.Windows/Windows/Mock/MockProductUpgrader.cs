@@ -7,7 +7,7 @@ using System.IO;
 
 namespace GVFS.UnitTests.Windows.Mock.Upgrader
 {
-    public class MockProductUpgrader : GitHubReleasesUpgrader
+    public class MockProductUpgrader : GitHubUpgrader
     {
         private string expectedGVFSAssetName;
         private string expectedGitAssetName;
@@ -15,7 +15,7 @@ namespace GVFS.UnitTests.Windows.Mock.Upgrader
 
         public MockProductUpgrader(
             string currentVersion,
-            ITracer tracer) : base(currentVersion, tracer)
+            ITracer tracer) : base(currentVersion, tracer, null)
         {
             this.DownloadedFiles = new List<string>();
             this.InstallerArgs = new Dictionary<string, Dictionary<string, string>>();
@@ -35,7 +35,7 @@ namespace GVFS.UnitTests.Windows.Mock.Upgrader
             GitCleanup = 0x80,
         }
 
-        public RingType LocalRingConfig { get; set; }
+        public GitHubUpgraderConfig.RingType LocalRingConfig { get; set; }
         public List<string> DownloadedFiles { get; private set; }
         public Dictionary<string, Dictionary<string, string>> InstallerArgs { get; private set; }
 
@@ -56,14 +56,14 @@ namespace GVFS.UnitTests.Windows.Mock.Upgrader
             this.failActionTypes = ActionType.Invalid;
         }
 
-        public void PretendNewReleaseAvailableAtRemote(string upgradeVersion, RingType remoteRing)
+        public void PretendNewReleaseAvailableAtRemote(string upgradeVersion, GitHubUpgraderConfig.RingType remoteRing)
         {
             string assetDownloadURLPrefix = "https://github.com/Microsoft/VFSForGit/releases/download/v" + upgradeVersion;
             Release release = new Release();
 
             release.Name = "GVFS " + upgradeVersion;
             release.Tag = "v" + upgradeVersion;
-            release.PreRelease = remoteRing == RingType.Fast;
+            release.PreRelease = remoteRing == GitHubUpgraderConfig.RingType.Fast;
             release.Assets = new List<Asset>();
 
             Random random = new Random();
@@ -100,11 +100,12 @@ namespace GVFS.UnitTests.Windows.Mock.Upgrader
             return true;
         }
 
+        /*
         protected override bool TryLoadRingConfig(out string error)
         {
             this.Ring = this.LocalRingConfig;
 
-            if (this.LocalRingConfig == RingType.Invalid)
+            if (this.LocalRingConfig == GitHubUpgraderConfig.RingType.Invalid)
             {
                 error = "Invalid upgrade ring `Invalid` specified in gvfs config.";
                 return false;
@@ -112,7 +113,7 @@ namespace GVFS.UnitTests.Windows.Mock.Upgrader
 
             error = null;
             return true;
-        }
+        } */
 
         protected override bool TryDownloadAsset(Asset asset, out string errorMessage)
         {

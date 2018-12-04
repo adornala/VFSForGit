@@ -2,45 +2,35 @@
 using GVFS.Common.Git;
 using GVFS.Common.Tracing;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Json;
 
 namespace GVFS.Common
 {
-    public abstract class ProductUpgraderBase
+    public abstract partial class ProductUpgrader
     {
-        public const string UpgradeDirectoryName = "GVFS.Upgrade";
-        public const string LogDirectory = "Logs";
-        public const string DownloadDirectory = "Downloads";
-
-        protected const string RootDirectory = UpgradeDirectoryName;
-        protected const string GVFSInstallerFileNamePrefix = "SetupGVFS";
-        protected const string VFSForGitInstallerFileNamePrefix = "VFSForGit";
         protected const string CommonInstallerArgs = "/VERYSILENT /CLOSEAPPLICATIONS /SUPPRESSMSGBOXES /NORESTART";
         protected const string GVFSInstallerArgs = CommonInstallerArgs + " /MOUNTREPOS=false";
         protected const string GitInstallerArgs = CommonInstallerArgs + " /ALLOWDOWNGRADE=1";
         protected const int RepoMountFailureExitCode = 17;
         protected const string ToolsDirectory = "Tools";
+
+        protected static readonly string GitBinPath = GVFSPlatform.Instance.GitInstallation.GetInstalledGitBinPath();
         protected static readonly string UpgraderToolName = GVFSPlatform.Instance.Constants.GVFSUpgraderExecutableName;
+        protected static readonly string InstallerExtension = GVFSPlatform.Instance.Constants.InstallerExtension;
         protected static readonly string UpgraderToolConfigFile = UpgraderToolName + ".config";
         protected static readonly string[] UpgraderToolAndLibs =
-            {
-                UpgraderToolName,
-                UpgraderToolConfigFile,
-                "GVFS.Common.dll",
-                "GVFS.Platform.Windows.dll",
-                "Microsoft.Diagnostics.Tracing.EventSource.dll",
-                "netstandard.dll",
-                "System.Net.Http.dll",
-                "Newtonsoft.Json.dll"
-            };
+        {
+            UpgraderToolName,
+            UpgraderToolConfigFile,
+            "GVFS.Common.dll",
+            "GVFS.Platform.Windows.dll",
+            "Microsoft.Diagnostics.Tracing.EventSource.dll",
+            "netstandard.dll",
+            "System.Net.Http.dll",
+            "Newtonsoft.Json.dll"
+        };
 
-        protected ProductUpgraderBase(string currentVersion, ITracer tracer)
+        protected ProductUpgrader(string currentVersion, ITracer tracer)
         {
             this.InstalledVersion = new Version(currentVersion);
             this.Tracer = tracer;
@@ -54,49 +44,40 @@ namespace GVFS.Common
         protected PhysicalFileSystem FileSystem { get; set; }
         protected ITracer Tracer { get; set; }
 
-        public static ProductUpgraderBase LoadUpgrader(string gitBinPath, ITracer tracer, out string error)
+        public static ProductUpgrader CreateUpgrader(ITracer tracer, out string error)
         {
-            error = null;
-            LocalGVFSConfig localConfig = new LocalGVFSConfig();
-            ProductUpgraderBase upgrader;
-
-            string upgradeFeedUrl;
-            string upgradePackageFeedName;
-            string upgradeFeedUrlForCredentials;
-            if (localConfig.TryGetConfig(GVFSConstants.LocalGVFSConfig.UpgradeFeedUrl, out upgradeFeedUrl, out error))
+            ProductUpgrader upgrader;
+            bool isEnabled;
+            bool isConfigured;
+            if (NuGetUpgrader.TryCreateNuGetUpgrader(tracer, out isEnabled, out isConfigured, out upgrader, out error))
             {
-                // If upgrade feed url has been specified, then load NuGet Upgrader
-                if (!localConfig.TryGetConfig(GVFSConstants.LocalGVFSConfig.UpgradeFeedPackageName, out upgradePackageFeedName, out error))
-                {
-                    return null;
-                }
-
-                if (!localConfig.TryGetConfig(GVFSConstants.LocalGVFSConfig.UpgradeFeedCredentialUrl, out upgradeFeedUrlForCredentials, out error))
-                {
-                    return null;
-                }
-
-                GitProcess gitProcess = new GitProcess(gitBinPath, null, null);
-                GitAuthentication auth = new GitAuthentication(gitProcess, upgradeFeedUrlForCredentials);
-
-                string credential;
-                auth.TryGetCredentials(tracer, out credential, out error);
-
-                upgrader = new NuGetPackageUpgrader(
-                    ProcessHelper.GetCurrentProcessVersion(),
-                    tracer,
-                    upgradeFeedUrl,
-                    upgradePackageFeedName,
-                    GetAssetDownloadsPath(),
-                    credential);
-            }
-            else
-            {
-                error = null;
-                upgrader = new GitHubReleasesUpgrader(ProcessHelper.GetCurrentProcessVersion(), tracer);
+                return upgrader;
             }
 
-            return upgrader;
+            if (isEnabled && !isConfigured)
+            {
+                // Configuration error
+                return null;
+            }
+
+            if (GitHubUpgrader.TryCreateGitHubUpgrader(tracer, out isEnabled, out isConfigured, out upgrader, out error))
+            {
+                return upgrader;
+            }
+
+            if (isEnabled && !isConfigured)
+            {
+                // Configuration error
+                return null;
+            }
+
+            if (tracer != null)
+            {
+                tracer.RelatedError($"{nameof(CreateUpgrader)}: Could not find upgrade server config. {error}");
+            }
+
+            error = GVFSConstants.UpgradeVerbMessages.InvalidRingConsoleAlert + Environment.NewLine + "Error: " + error;
+            return null;
         }
 
         public abstract bool Initialize(out string errorMessage);
@@ -107,9 +88,15 @@ namespace GVFS.Common
 
         public abstract bool TryDownloadNewestVersion(out string errorMessage);
 
+        public abstract bool TryGetPreInstallerInfo(out string name, out Version version, out string error);
+        public abstract bool TryRunPreInstaller(out bool installationSucceeded, out string error);
+
         public abstract bool TryRunGitInstaller(out bool installationSucceeded, out string error);
 
         public abstract bool TryRunGVFSInstaller(out bool installationSucceeded, out string error);
+
+        public abstract bool TryGetPostInstallerInfo(out string name, out Version version, out string error);
+        public abstract bool TryRunPostInstaller(out bool installationSucceeded, out string error);
 
         public abstract bool TryCleanup(out string error);
 
@@ -162,23 +149,6 @@ namespace GVFS.Common
             error = exception.Message;
             this.TraceException(exception, nameof(this.TrySetupToolsDirectory), $"Error creating upgrade tools directory {toolsDirectoryPath}.");
             return false;
-        }
-
-        protected static string GetUpgradesDirectoryPath()
-        {
-            return Paths.GetServiceDataRoot(RootDirectory);
-        }
-
-        protected static string GetLogDirectoryPath()
-        {
-            return Path.Combine(Paths.GetServiceDataRoot(RootDirectory), LogDirectory);
-        }
-
-        protected static string GetAssetDownloadsPath()
-        {
-            return Path.Combine(
-                Paths.GetServiceDataRoot(RootDirectory),
-                DownloadDirectory);
         }
 
         protected static string GetTempPath()

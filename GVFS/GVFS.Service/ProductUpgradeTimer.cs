@@ -54,13 +54,14 @@ namespace GVFS.Service
 
         private void TimerCallback(object unusedState)
         {
+            /*
             string errorMessage = null;
 
             InstallerPreRunChecker prerunChecker = new InstallerPreRunChecker(this.tracer, string.Empty);
             if (prerunChecker.TryRunPreUpgradeChecks(out string _) && !this.TryDownloadUpgrade(out errorMessage))
             {
                 this.tracer.RelatedError(errorMessage);
-            }
+            } */
         }
 
         private bool TryDownloadUpgrade(out string errorMessage)
@@ -68,7 +69,7 @@ namespace GVFS.Service
             using (ITracer activity = this.tracer.StartActivity("Checking for product upgrades.", EventLevel.Informational))
             {
                 string error;
-                ProductUpgraderBase productUpgrader = ProductUpgraderBase.LoadUpgrader(GVFSPlatform.Instance.GitInstallation.GetInstalledGitBinPath(), this.tracer, out error);
+                ProductUpgrader productUpgrader = ProductUpgrader.CreateUpgrader(this.tracer, out error);
                 Version newerVersion = null;
                 string detailedError = null;
                 if (!productUpgrader.TryGetNewerVersion(out newerVersion, out detailedError))

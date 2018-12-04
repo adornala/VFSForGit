@@ -38,7 +38,7 @@ namespace GVFS.UnitTests.Windows.Upgrader
                 {
                     this.Upgrader.PretendNewReleaseAvailableAtRemote(
                         upgradeVersion: NewerThanLocalVersion,
-                        remoteRing: GitHubReleasesUpgrader.RingType.Slow);
+                        remoteRing: GitHubUpgrader.GitHubUpgraderConfig.RingType.Slow);
                 },
                 expectedReturn: ReturnCode.Success,
                 expectedOutput: new List<string>
@@ -57,7 +57,7 @@ namespace GVFS.UnitTests.Windows.Upgrader
                 {
                     this.Upgrader.PretendNewReleaseAvailableAtRemote(
                         upgradeVersion: OlderThanLocalVersion,
-                        remoteRing: GitHubReleasesUpgrader.RingType.Slow);
+                        remoteRing: GitHubUpgrader.GitHubUpgraderConfig.RingType.Slow);
                 },
                 expectedReturn: ReturnCode.Success,
                 expectedOutput: new List<string>

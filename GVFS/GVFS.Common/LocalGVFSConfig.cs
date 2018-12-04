@@ -90,7 +90,7 @@ namespace GVFS.Common
         {
             if (!this.TryLoadSettings(out error))
             {
-                error = $"Error loading config settings.";
+                error = $"Error loading config settings. {error}";
                 return false;
             }
 

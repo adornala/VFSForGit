@@ -13,12 +13,12 @@ namespace GVFS.CommandLine
     {
         private const string UpgradeVerbName = "upgrade";
         private ITracer tracer;
-        private ProductUpgraderBase upgrader;
+        private ProductUpgrader upgrader;
         private InstallerPreRunChecker prerunChecker;
         private ProcessLauncher processLauncher;
 
         public UpgradeVerb(
-            ProductUpgraderBase upgrader,
+            ProductUpgrader upgrader,
             ITracer tracer,
             InstallerPreRunChecker prerunChecker,
             ProcessLauncher processWrapper,
@@ -75,7 +75,7 @@ namespace GVFS.CommandLine
                     this.prerunChecker = new InstallerPreRunChecker(this.tracer, this.Confirmed ? GVFSConstants.UpgradeVerbMessages.GVFSUpgradeConfirm : GVFSConstants.UpgradeVerbMessages.GVFSUpgrade);
 
                     string errorMessage;
-                    this.upgrader = ProductUpgraderBase.LoadUpgrader(GVFSPlatform.Instance.GitInstallation.GetInstalledGitBinPath(), this.tracer, out errorMessage);
+                    this.upgrader = ProductUpgrader.CreateUpgrader(this.tracer, out errorMessage);
                 }
 
                 return true;
