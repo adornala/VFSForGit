@@ -7,6 +7,7 @@ using System.Collections.Generic;
 
 namespace GVFS.UnitTests.Windows.Upgrader
 {
+    /*
     [TestFixture]
     public class UpgradeOrchestratorTests : UpgradeTests
     {
@@ -237,4 +238,5 @@ namespace GVFS.UnitTests.Windows.Upgrader
             return this.orchestrator.ExitCode;
         }
     }
+    */
 }

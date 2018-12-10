@@ -52,14 +52,15 @@ namespace GVFS.CommandLine
         public override void Execute()
         {
             ReturnCode exitCode = ReturnCode.Success;
-            if (!this.TryInitializeUpgrader() || !this.TryRunProductUpgrade())
+            string error;
+            if (!this.TryInitializeUpgrader(out error) || !this.TryRunProductUpgrade())
             {
                 exitCode = ReturnCode.GenericError;
-                this.ReportErrorAndExit(this.tracer, exitCode, string.Empty);
+                this.ReportErrorAndExit(this.tracer, exitCode, error);
             }
         }
 
-        private bool TryInitializeUpgrader()
+        private bool TryInitializeUpgrader(out string error)
         {
             if (GVFSPlatform.Instance.UnderConstruction.SupportsGVFSUpgrade)
             {
@@ -73,16 +74,18 @@ namespace GVFS.CommandLine
 
                     this.tracer = jsonTracer;
                     this.prerunChecker = new InstallerPreRunChecker(this.tracer, this.Confirmed ? GVFSConstants.UpgradeVerbMessages.GVFSUpgradeConfirm : GVFSConstants.UpgradeVerbMessages.GVFSUpgrade);
-
-                    string errorMessage;
-                    this.upgrader = ProductUpgrader.CreateUpgrader(this.tracer, out errorMessage);
+                    this.upgrader = ProductUpgrader.CreateUpgrader(this.tracer, out error);
+                }
+                else
+                {
+                    error = null;
                 }
 
-                return true;
+                return this.upgrader != null;
             }
             else
             {
-                this.ReportInfoToConsole($"ERROR: {GVFSConstants.UpgradeVerbMessages.GVFSUpgrade} is not supported on this operating system.");
+                error = $"ERROR: {GVFSConstants.UpgradeVerbMessages.GVFSUpgrade} is not supported on this operating system.";
                 return false;
             }
         }
@@ -103,23 +106,23 @@ namespace GVFS.CommandLine
                 return false;
             }
 
-            if (!this.TryLoadUpgradeRing(out ring, out error))
+            bool isError;
+            string consoleMessage;
+            if (!this.upgrader.CanRunUsingCurrentConfig(out isError, out consoleMessage, out error))
             {
-                this.tracer.RelatedError($"{nameof(this.TryRunProductUpgrade)}: Could not load upgrade ring. {error}");
-                this.ReportInfoToConsole(GVFSConstants.UpgradeVerbMessages.InvalidRingConsoleAlert);
-                this.Output.WriteLine(errorOutputFormat, error);
-                return false;
-            }
+				this.upgrader.DeletePreviousDownloads();
+                this.ReportInfoToConsole(consoleMessage);
 
-            if (ring == ProductUpgrader.RingType.None || ring == ProductUpgrader.RingType.NoConfig)
-            {
-                this.tracer.RelatedInfo($"{nameof(this.TryRunProductUpgrade)}: {GVFSConstants.UpgradeVerbMessages.NoneRingConsoleAlert}");
-                this.ReportInfoToConsole(ring == ProductUpgrader.RingType.None ? GVFSConstants.UpgradeVerbMessages.NoneRingConsoleAlert : GVFSConstants.UpgradeVerbMessages.NoRingConfigConsoleAlert);
-                this.ReportInfoToConsole(GVFSConstants.UpgradeVerbMessages.SetUpgradeRingCommand);
-                this.upgrader.DeletePreviousDownloads();
+                if (isError)
+                {
+                    this.Output.WriteLine(errorOutputFormat, error);
+                    this.tracer.RelatedError($"{nameof(this.TryRunProductUpgrade)}: Upgrade checks failed. {error}");
+                    return false;
+                }
+
                 return true;
             }
-                        
+
             if (!this.TryRunUpgradeChecks(out newestVersion, out error))
             {
                 this.Output.WriteLine(errorOutputFormat, error);

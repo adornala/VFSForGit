@@ -19,19 +19,25 @@ namespace GVFS.UnitTests.Windows.Upgrader
         protected MockTextWriter Output { get; private set; }
         protected MockInstallerPrerunChecker PrerunChecker { get; private set; }
         protected MockProductUpgrader Upgrader { get; private set; }
+        protected MockLocalGVFSConfig LocalConfig { get; private set; }
 
         public virtual void Setup()
         {
             this.Tracer = new MockTracer();
             this.Output = new MockTextWriter();
             this.PrerunChecker = new MockInstallerPrerunChecker(this.Tracer);
-            this.Upgrader = new MockProductUpgrader(LocalGVFSVersion, this.Tracer);
+            this.LocalConfig = new MockLocalGVFSConfig();
+
+            this.Upgrader = new MockProductUpgrader(
+                LocalGVFSVersion, 
+                this.Tracer, 
+                new GitHubUpgrader.GitHubUpgraderConfig(this.Tracer, this.LocalConfig));
      
             this.PrerunChecker.Reset();
             this.Upgrader.PretendNewReleaseAvailableAtRemote(
                 upgradeVersion: NewerThanLocalVersion,
                 remoteRing: GitHubUpgrader.GitHubUpgraderConfig.RingType.Slow);
-            this.Upgrader.LocalRingConfig = GitHubUpgrader.GitHubUpgraderConfig.RingType.Slow;
+            this.LocalConfig.TrySetConfig("upgrade.ring", "Slow", out _);
         }
 
         [TestCase]
@@ -41,7 +47,15 @@ namespace GVFS.UnitTests.Windows.Upgrader
             this.ConfigureRunAndVerify(
                 configure: () =>
                 {
-                    this.Upgrader.LocalRingConfig = GitHubUpgrader.GitHubUpgraderConfig.RingType.None;
+                    this.LocalConfig.TrySetConfig("upgrade.ring", "None", out _);
+
+                    bool isEnabled;
+                    bool isConfigured;
+                    string error;
+                    this.Upgrader.Config.TryLoad(out isEnabled, out isConfigured, out error);
+                    isEnabled.ShouldEqual(true);
+                    isConfigured.ShouldEqual(true);
+                    error.ShouldBeNull();
                 },
                 expectedReturn: ReturnCode.Success,
                 expectedOutput: new List<string>
@@ -60,7 +74,15 @@ namespace GVFS.UnitTests.Windows.Upgrader
             this.ConfigureRunAndVerify(
                 configure: () =>
                 {
-                    this.Upgrader.LocalRingConfig = GitHubUpgrader.GitHubUpgraderConfig.RingType.Invalid;
+                    this.LocalConfig.TrySetConfig("upgrade.ring", "Invalid", out _);
+
+                    bool isEnabled;
+                    bool isConfigured;
+                    string error;
+                    this.Upgrader.Config.TryLoad(out isEnabled, out isConfigured, out error);
+                    isEnabled.ShouldEqual(true);
+                    isConfigured.ShouldEqual(true);
+                    error.ShouldBeNull();
                 },
                 expectedReturn: ReturnCode.GenericError,
                 expectedOutput: new List<string>
@@ -73,6 +95,7 @@ namespace GVFS.UnitTests.Windows.Upgrader
                 });
         }
 
+        /*
         [TestCase]
         [Category(CategoryConstants.ExceptionExpected)]
         public virtual void FetchReleaseInfo()
@@ -93,6 +116,7 @@ namespace GVFS.UnitTests.Windows.Upgrader
                     errorString
                 });
         }
+        */
 
         protected abstract ReturnCode RunUpgrade();
 

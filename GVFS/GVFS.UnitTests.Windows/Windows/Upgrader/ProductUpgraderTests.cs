@@ -5,6 +5,7 @@ using System;
 
 namespace GVFS.UnitTests.Windows.Upgrader
 {
+    /*
     [TestFixture]
     public class ProductUpgraderTests : UpgradeTests
     {
@@ -127,4 +128,5 @@ namespace GVFS.UnitTests.Windows.Upgrader
             }
         }
     }
+    */
 }

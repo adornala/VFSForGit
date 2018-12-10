@@ -15,7 +15,8 @@ namespace GVFS.UnitTests.Windows.Mock.Upgrader
 
         public MockProductUpgrader(
             string currentVersion,
-            ITracer tracer) : base(currentVersion, tracer, null)
+            ITracer tracer,
+            GitHubUpgraderConfig config) : base(currentVersion, tracer, config)
         {
             this.DownloadedFiles = new List<string>();
             this.InstallerArgs = new Dictionary<string, Dictionary<string, string>>();
@@ -35,7 +36,6 @@ namespace GVFS.UnitTests.Windows.Mock.Upgrader
             GitCleanup = 0x80,
         }
 
-        public GitHubUpgraderConfig.RingType LocalRingConfig { get; set; }
         public List<string> DownloadedFiles { get; private set; }
         public Dictionary<string, Dictionary<string, string>> InstallerArgs { get; private set; }
 
@@ -99,21 +99,6 @@ namespace GVFS.UnitTests.Windows.Mock.Upgrader
             error = null;
             return true;
         }
-
-        /*
-        protected override bool TryLoadRingConfig(out string error)
-        {
-            this.Ring = this.LocalRingConfig;
-
-            if (this.LocalRingConfig == GitHubUpgraderConfig.RingType.Invalid)
-            {
-                error = "Invalid upgrade ring `Invalid` specified in gvfs config.";
-                return false;
-            }
-
-            error = null;
-            return true;
-        } */
 
         protected override bool TryDownloadAsset(Asset asset, out string errorMessage)
         {

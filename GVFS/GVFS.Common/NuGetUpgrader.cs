@@ -93,6 +93,14 @@ namespace GVFS.Common
             return true;
         }
 
+        public override bool CanRunUsingCurrentConfig(out bool isConfigError, out string consoleMessage, out string errorMessage)
+        {
+            isConfigError = false;
+            consoleMessage = null;
+            errorMessage = null;
+            return true;
+        }
+
         public override bool TryGetNewerVersion(out Version newVersion, out string errorMessage)
         {
             newVersion = null;

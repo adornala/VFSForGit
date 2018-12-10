@@ -73,14 +73,16 @@ namespace GVFS.Common
 
             if (tracer != null)
             {
-                tracer.RelatedError($"{nameof(CreateUpgrader)}: Could not find upgrade server config. {error}");
+                tracer.RelatedError($"{nameof(CreateUpgrader)}: Could not create upgrader. {error}");
             }
 
-            error = GVFSConstants.UpgradeVerbMessages.InvalidRingConsoleAlert + Environment.NewLine + "Error: " + error;
+            error = GVFSConstants.UpgradeVerbMessages.InvalidRingConsoleAlert + Environment.NewLine + Environment.NewLine + "Error: " + error;
             return null;
         }
 
         public abstract bool Initialize(out string errorMessage);
+
+        public abstract bool CanRunUsingCurrentConfig(out bool isConfigError, out string consoleMessage, out string errorMessage);
 
         public abstract bool TryGetNewerVersion(out Version newVersion, out string errorMessage);
 

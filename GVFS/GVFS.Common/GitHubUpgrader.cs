@@ -29,7 +29,7 @@ namespace GVFS.Common
             this.Config = upgraderConfig;
         }
 
-        private GitHubUpgraderConfig Config { get; set; }
+        public GitHubUpgraderConfig Config { get; private set; }
 
         public static bool TryCreateGitHubUpgrader(
             ITracer tracer,
@@ -77,6 +77,48 @@ namespace GVFS.Common
             return true;
         }
 
+        public override bool CanRunUsingCurrentConfig(
+            out bool isConfigError, 
+            out string consoleMessage,
+            out string errorMessage)
+        {
+            if (this.Config.UpgradeRing == GitHubUpgraderConfig.RingType.None)
+            {
+                isConfigError = false;
+                consoleMessage = GVFSConstants.UpgradeVerbMessages.NoneRingConsoleAlert + Environment.NewLine + GVFSConstants.UpgradeVerbMessages.SetUpgradeRingCommand;
+                errorMessage = null;
+                return false;
+            }
+
+            if (this.Config.UpgradeRing == GitHubUpgraderConfig.RingType.NoConfig)
+            {
+                isConfigError = false;
+                consoleMessage = GVFSConstants.UpgradeVerbMessages.NoRingConfigConsoleAlert + Environment.NewLine + GVFSConstants.UpgradeVerbMessages.SetUpgradeRingCommand;
+                errorMessage = null;
+                return false;
+            }
+
+            if (this.Config.UpgradeRing == GitHubUpgraderConfig.RingType.Invalid)
+            {
+                string ring;
+                string error;
+                if (!this.Config.LocalConfig.TryGetConfig(GVFSConstants.LocalGVFSConfig.UpgradeRing, out ring, out error))
+                {
+                    ring = "invalid";
+                }
+
+                consoleMessage = GVFSConstants.UpgradeVerbMessages.InvalidRingConsoleAlert;
+                errorMessage = $"Invalid upgrade ring `{ring}` specified in gvfs config." + Environment.NewLine + GVFSConstants.UpgradeVerbMessages.SetUpgradeRingCommand;
+                isConfigError = true;
+                return false;
+            }
+
+            isConfigError = false;
+            consoleMessage = null;
+            errorMessage = null;
+            return true;
+        }
+
         public override bool TryGetNewerVersion(
             out Version newVersion,
             out string errorMessage)
@@ -87,7 +129,7 @@ namespace GVFS.Common
             if (this.Config.UpgradeRing != GitHubUpgraderConfig.RingType.Slow &&
                 this.Config.UpgradeRing != GitHubUpgraderConfig.RingType.Fast)
             {
-                errorMessage = "Invalid ring";
+                errorMessage = GVFSConstants.UpgradeVerbMessages.InvalidRingConsoleAlert;
                 return false;
             }
 
@@ -431,9 +473,8 @@ namespace GVFS.Common
             }
 
             public RingType UpgradeRing { get; private set; }
-            public bool FullyConfigured { get; private set; }
-            private ITracer Tracer { get; set; }
-            private LocalGVFSConfig LocalConfig { get; set; }
+            public LocalGVFSConfig LocalConfig { get; private set; }
+            private ITracer Tracer { get; set; }            
 
             public bool TryLoad(out bool isEnabled, out bool isConfigured, out string error)
             {
@@ -449,27 +490,27 @@ namespace GVFS.Common
                         ringType != RingType.Invalid)
                     {
                         this.UpgradeRing = ringType;
-                        error = null;
                         isEnabled = true;
                         isConfigured = true;
-                        return true;
-                    }
-
-                    if (string.IsNullOrEmpty(ringConfig))
-                    {
-                        this.UpgradeRing = RingType.NoConfig;
-                        error = "No upgrade ring is specified in gvfs config." + Environment.NewLine;
                     }
                     else
                     {
-                        isEnabled = true;
-                        this.UpgradeRing = RingType.Invalid;
-                        error = "Invalid upgrade ring `" + ringConfig + "` specified in gvfs config." + Environment.NewLine;
+                        if (!string.IsNullOrEmpty(ringConfig))
+                        {
+                            isEnabled = true;
+                            this.UpgradeRing = RingType.Invalid;
+                        }
+                        else
+                        {
+                            this.UpgradeRing = RingType.NoConfig;
+                        }
                     }
 
-                    error += GVFSConstants.UpgradeVerbMessages.SetUpgradeRingCommand;
+                    return true;
                 }
 
+                error = "Could not read GVFS Config." + Environment.NewLine;
+                error += GVFSConstants.UpgradeVerbMessages.SetUpgradeRingCommand;
                 return false;
             }
         }

@@ -30,6 +30,7 @@ namespace GVFS.UnitTests.Windows.Upgrader
             this.PrerunChecker.SetCommandToRerun("`gvfs upgrade`");
         }
 
+        /*
         [TestCase]
         public void UpgradeAvailabilityReporting()
         {
@@ -208,8 +209,9 @@ namespace GVFS.UnitTests.Windows.Upgrader
                     "`gvfs upgrade` is not supported in unattended mode"
                 });
         }
-
-        protected override ReturnCode RunUpgrade()
+        */
+		
+        protected override void RunUpgrade()
         {
             try
             {
