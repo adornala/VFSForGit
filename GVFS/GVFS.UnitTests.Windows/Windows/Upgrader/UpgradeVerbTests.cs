@@ -76,9 +76,8 @@ namespace GVFS.UnitTests.Windows.Upgrader
             this.ConfigureRunAndVerify(
                 configure: () =>
                 {
-
                     this.SetUpgradeRing("Slow");
-                    this.UpgradeVerb.Confirmed = true;
+                    this.upgradeVerb.Confirmed = true;
                     this.PrerunChecker.SetCommandToRerun("`gvfs upgrade --confirm`");
                 },
                 expectedReturn: ReturnCode.Success,
@@ -214,7 +213,7 @@ namespace GVFS.UnitTests.Windows.Upgrader
                 });
         }
 
-        protected override void RunUpgrade()
+        protected override ReturnCode RunUpgrade()
         {
             try
             {

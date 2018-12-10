@@ -153,6 +153,18 @@ namespace GVFS.Common
             return false;
         }
 
+        public void DeletePreviousDownloads()
+        {
+            try
+            {
+                this.FileSystem.DeleteDirectory(GetAssetDownloadsPath());
+            }
+            catch (Exception ex)
+            {
+                this.TraceException(ex, nameof(this.DeletePreviousDownloads), $"Could not remove directory: {GetAssetDownloadsPath()}");
+            }
+        }
+
         protected static string GetTempPath()
         {
             return Path.Combine(

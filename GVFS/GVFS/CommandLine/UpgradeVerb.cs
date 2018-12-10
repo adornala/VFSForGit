@@ -110,7 +110,7 @@ namespace GVFS.CommandLine
             string consoleMessage;
             if (!this.upgrader.CanRunUsingCurrentConfig(out isError, out consoleMessage, out error))
             {
-				this.upgrader.DeletePreviousDownloads();
+                this.upgrader.DeletePreviousDownloads();
                 this.ReportInfoToConsole(consoleMessage);
 
                 if (isError)
@@ -133,7 +133,7 @@ namespace GVFS.CommandLine
 
             if (newestVersion == null)
             {
-				// Make sure there a no asset installers remaining in the Downloads directory. This can happen if user
+                // Make sure there a no asset installers remaining in the Downloads directory. This can happen if user
                 // upgraded by manually downloading and running asset installers.
                 this.upgrader.DeletePreviousDownloads();
                 this.ReportInfoToConsole(upgradeAvailableMessage);
