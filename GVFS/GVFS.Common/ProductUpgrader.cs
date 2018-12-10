@@ -84,7 +84,7 @@ namespace GVFS.Common
 
         public abstract bool CanRunUsingCurrentConfig(out bool isConfigError, out string consoleMessage, out string errorMessage);
 
-        public abstract bool TryGetNewerVersion(out Version newVersion, out string errorMessage);
+        public abstract bool TryGetNewerVersion(out Version newVersion, out string consoleMessage, out string errorMessage);
 
         public abstract bool TryGetGitVersion(out GitVersion gitVersion, out string error);
 

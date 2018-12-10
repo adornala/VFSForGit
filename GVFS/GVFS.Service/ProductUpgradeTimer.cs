@@ -72,7 +72,7 @@ namespace GVFS.Service
                 ProductUpgrader productUpgrader = ProductUpgrader.CreateUpgrader(this.tracer, out error);
                 Version newerVersion = null;
                 string detailedError = null;
-                if (!productUpgrader.TryGetNewerVersion(out newerVersion, out detailedError))
+                if (!productUpgrader.TryGetNewerVersion(out newerVersion, out string _, out detailedError))
                 {
                     errorMessage = "Could not fetch new version info. " + detailedError;
                     return false;

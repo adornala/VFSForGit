@@ -327,7 +327,7 @@ namespace GVFS.Upgrader
 
             using (ITracer activity = this.tracer.StartActivity(nameof(this.TryCheckIfUpgradeAvailable), EventLevel.Informational))
             {
-                if (!this.upgrader.TryGetNewerVersion(out newestVersion, out consoleError))
+                if (!this.upgrader.TryGetNewerVersion(out newestVersion, out string _, out consoleError))
                 {
                     EventMetadata metadata = new EventMetadata();
                     metadata.Add("Upgrade Step", nameof(this.TryCheckIfUpgradeAvailable));

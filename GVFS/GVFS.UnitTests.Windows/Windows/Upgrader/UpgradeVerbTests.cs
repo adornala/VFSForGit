@@ -30,13 +30,13 @@ namespace GVFS.UnitTests.Windows.Upgrader
             this.PrerunChecker.SetCommandToRerun("`gvfs upgrade`");
         }
 
-        /*
         [TestCase]
         public void UpgradeAvailabilityReporting()
         {
             this.ConfigureRunAndVerify(
                 configure: () =>
                 {
+                    this.SetUpgradeRing("Slow");
                     this.Upgrader.PretendNewReleaseAvailableAtRemote(
                         upgradeVersion: NewerThanLocalVersion,
                         remoteRing: GitHubUpgrader.GitHubUpgraderConfig.RingType.Slow);
@@ -56,6 +56,7 @@ namespace GVFS.UnitTests.Windows.Upgrader
             this.ConfigureRunAndVerify(
                 configure: () =>
                 {
+                    this.SetUpgradeRing("Slow");
                     this.Upgrader.PretendNewReleaseAvailableAtRemote(
                         upgradeVersion: OlderThanLocalVersion,
                         remoteRing: GitHubUpgrader.GitHubUpgraderConfig.RingType.Slow);
@@ -75,7 +76,9 @@ namespace GVFS.UnitTests.Windows.Upgrader
             this.ConfigureRunAndVerify(
                 configure: () =>
                 {
-                    this.upgradeVerb.Confirmed = true;
+
+                    this.SetUpgradeRing("Slow");
+                    this.UpgradeVerb.Confirmed = true;
                     this.PrerunChecker.SetCommandToRerun("`gvfs upgrade --confirm`");
                 },
                 expectedReturn: ReturnCode.Success,
@@ -110,6 +113,7 @@ namespace GVFS.UnitTests.Windows.Upgrader
             this.ConfigureRunAndVerify(
                 configure: () =>
                 {
+                    this.SetUpgradeRing("Slow");
                     this.Upgrader.SetFailOnAction(MockProductUpgrader.ActionType.CopyTools);
                     this.upgradeVerb.Confirmed = true;
                     this.PrerunChecker.SetCommandToRerun("`gvfs upgrade --confirm`");
@@ -209,8 +213,7 @@ namespace GVFS.UnitTests.Windows.Upgrader
                     "`gvfs upgrade` is not supported in unattended mode"
                 });
         }
-        */
-		
+
         protected override void RunUpgrade()
         {
             try

@@ -54,8 +54,9 @@ namespace GVFS.Common
         public Version QueryLatestVersion()
         {
             Version version;
+            string consoleMessage;
             string error;
-            this.TryGetNewerVersion(out version, out error);
+            this.TryGetNewerVersion(out version, out consoleMessage, out error);
             return version;
         }
 
@@ -121,14 +122,17 @@ namespace GVFS.Common
 
         public override bool TryGetNewerVersion(
             out Version newVersion,
+            out string consoleMessage,
             out string errorMessage)
         {
             List<Release> releases;
 
             newVersion = null;
+            consoleMessage = null;
             if (this.Config.UpgradeRing != GitHubUpgraderConfig.RingType.Slow &&
                 this.Config.UpgradeRing != GitHubUpgraderConfig.RingType.Fast)
             {
+                consoleMessage = null;
                 errorMessage = GVFSConstants.UpgradeVerbMessages.InvalidRingConsoleAlert;
                 return false;
             }
@@ -145,8 +149,14 @@ namespace GVFS.Common
                     {
                         newVersion = releaseVersion;
                         this.newestRelease = nextRelease;
+                        consoleMessage = $"New GVFS version {newVersion.ToString()} available in ring {this.Config.UpgradeRing}.";
                         break;
                     }
+                }
+                
+                if (newVersion == null)
+                {
+                    consoleMessage = $"Great news, you're all caught up on upgrades in the {this.Config.UpgradeRing} ring!";
                 }
 
                 return true;

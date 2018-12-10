@@ -83,7 +83,8 @@ namespace GVFS.Common
         {
             Version version;
             string error;
-            this.TryGetNewerVersion(out version, out error);
+            string consoleMessage;
+            this.TryGetNewerVersion(out version, out consoleMessage, out error);
             return version;
         }
 
@@ -101,9 +102,10 @@ namespace GVFS.Common
             return true;
         }
 
-        public override bool TryGetNewerVersion(out Version newVersion, out string errorMessage)
+        public override bool TryGetNewerVersion(out Version newVersion, out string consoleMessage, out string errorMessage)
         {
             newVersion = null;
+            consoleMessage = null;
             errorMessage = null;
 
             IList<IPackageSearchMetadata> queryResults = this.QueryFeed(this.Config.PackageFeedName).GetAwaiter().GetResult();
