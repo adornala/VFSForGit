@@ -5,7 +5,6 @@ using System;
 
 namespace GVFS.UnitTests.Windows.Upgrader
 {
-    /*
     [TestFixture]
     public class ProductUpgraderTests : UpgradeTests
     {
@@ -108,14 +107,15 @@ namespace GVFS.UnitTests.Windows.Upgrader
             bool expectedReturn,
             string expectedUpgradeVersion)
         {
-            this.Upgrader.LocalRingConfig = localRing;
+            this.SetUpgradeRing(localRing.ToString());
             this.Upgrader.PretendNewReleaseAvailableAtRemote(
                 remoteVersion,
                 remoteRing);
 
             Version newVersion;
             string errorMessage;
-            this.Upgrader.TryGetNewerVersion(out newVersion, out errorMessage).ShouldEqual(expectedReturn);
+            string consoleMessage;
+            this.Upgrader.TryGetNewerVersion(out newVersion, out consoleMessage, out errorMessage).ShouldEqual(expectedReturn);
 
             if (string.IsNullOrEmpty(expectedUpgradeVersion))
             {
@@ -128,5 +128,4 @@ namespace GVFS.UnitTests.Windows.Upgrader
             }
         }
     }
-    */
 }

@@ -111,7 +111,6 @@ namespace GVFS.CommandLine
             if (!this.upgrader.CanRunUsingCurrentConfig(out isError, out consoleMessage, out error))
             {
                 this.upgrader.DeletePreviousDownloads();
-                this.ReportInfoToConsole(consoleMessage);
 
                 if (isError)
                 {
@@ -120,6 +119,7 @@ namespace GVFS.CommandLine
                     return false;
                 }
 
+                this.ReportInfoToConsole(consoleMessage);
                 return true;
             }
 

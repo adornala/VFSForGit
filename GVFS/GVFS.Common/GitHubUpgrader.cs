@@ -108,7 +108,7 @@ namespace GVFS.Common
                     ring = "invalid";
                 }
 
-                consoleMessage = GVFSConstants.UpgradeVerbMessages.InvalidRingConsoleAlert;
+                consoleMessage = null;
                 errorMessage = $"Invalid upgrade ring `{ring}` specified in gvfs config." + Environment.NewLine + GVFSConstants.UpgradeVerbMessages.SetUpgradeRingCommand;
                 isConfigError = true;
                 return false;
@@ -129,12 +129,10 @@ namespace GVFS.Common
 
             newVersion = null;
             consoleMessage = null;
-            if (this.Config.UpgradeRing != GitHubUpgraderConfig.RingType.Slow &&
-                this.Config.UpgradeRing != GitHubUpgraderConfig.RingType.Fast)
+            bool isConfigError;
+            if (!this.CanRunUsingCurrentConfig(out isConfigError, out consoleMessage, out errorMessage))
             {
-                consoleMessage = null;
-                errorMessage = GVFSConstants.UpgradeVerbMessages.InvalidRingConsoleAlert;
-                return false;
+                return !isConfigError;
             }
 
             if (this.TryFetchReleases(out releases, out errorMessage))

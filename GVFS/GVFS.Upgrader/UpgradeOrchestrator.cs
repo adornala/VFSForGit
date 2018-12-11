@@ -129,23 +129,42 @@ namespace GVFS.Upgrader
 
             Version newGVFSVersion = null;
             GitVersion newGitVersion = null;
-            string errorMessage = null;
+            string error = null;
+            string consoleMessage;
+            bool isError;
+
+            if (!this.upgrader.CanRunUsingCurrentConfig(out isError, out consoleMessage, out error))
+            {
+                this.upgrader.DeletePreviousDownloads();
+                this.output.WriteLine(consoleMessage);
+
+                if (isError)
+                {
+                    consoleError = error;
+                    this.tracer.RelatedError($"{nameof(this.TryRunUpgrade)}: Upgrade checks failed. {error}");
+                    return false;
+                }
+
+                consoleError = null;
+                return true;
+            }
+
             if (!this.LaunchInsideSpinner(
                 () =>
                 {
-                    if (!this.TryCheckIfUpgradeAvailable(out newGVFSVersion, out errorMessage))
+                    if (!this.TryCheckIfUpgradeAvailable(out newGVFSVersion, out error))
                     {
                         return false;
                     }
 
                     this.LogInstalledVersionInfo();
 
-                    if (!this.preRunChecker.TryRunPreUpgradeChecks(out errorMessage))
+                    if (!this.preRunChecker.TryRunPreUpgradeChecks(out error))
                     {
                         return false;
                     }
 
-                    if (!this.TryDownloadUpgrade(newGVFSVersion, out errorMessage))
+                    if (!this.TryDownloadUpgrade(newGVFSVersion, out error))
                     {
                         return false;
                     }
@@ -154,14 +173,14 @@ namespace GVFS.Upgrader
                 },
                 "Downloading"))
             {
-                consoleError = errorMessage;
+                consoleError = error;
                 return false;
             }
 
             if (!this.LaunchInsideSpinner(
                 () =>
                 {
-                    if (!this.preRunChecker.TryUnmountAllGVFSRepos(out errorMessage))
+                    if (!this.preRunChecker.TryUnmountAllGVFSRepos(out error))
                     {
                         return false;
                     }
@@ -172,18 +191,18 @@ namespace GVFS.Upgrader
                 },
                 "Unmounting repositories"))
             {
-                consoleError = errorMessage;
+                consoleError = error;
                 return false;
             }
 
             string preInstaller;
             Version preInstallerVersion;
-            if (this.upgrader.TryGetPreInstallerInfo(out preInstaller, out preInstallerVersion, out errorMessage))
+            if (this.upgrader.TryGetPreInstallerInfo(out preInstaller, out preInstallerVersion, out error))
             {
                 if (!this.LaunchInsideSpinner(
                 () =>
                 {
-                    if (!this.TryRunPreInstaller(preInstaller, preInstallerVersion, out errorMessage))
+                    if (!this.TryRunPreInstaller(preInstaller, preInstallerVersion, out error))
                     {
                         return false;
                     }
@@ -192,16 +211,16 @@ namespace GVFS.Upgrader
                 },
                 $"Running \"{preInstaller}\": {preInstallerVersion}"))
                 {
-                    consoleError = errorMessage;
+                    consoleError = error;
                     return false;
                 }
             }
 
-            this.TryGetNewGitVersion(out newGitVersion, out errorMessage);
+            this.TryGetNewGitVersion(out newGitVersion, out error);
             if (!this.LaunchInsideSpinner(
                 () =>
                 {
-                    if (!this.TryInstallGitUpgrade(newGitVersion, out errorMessage))
+                    if (!this.TryInstallGitUpgrade(newGitVersion, out error))
                     {
                         return false;
                     }
@@ -210,14 +229,14 @@ namespace GVFS.Upgrader
                 },
                 $"Installing Git version: {newGitVersion}"))
             {
-                consoleError = errorMessage;
+                consoleError = error;
                 return false;
             }
 
             if (!this.LaunchInsideSpinner(
                 () =>
                 {
-                    if (!this.TryInstallGVFSUpgrade(newGVFSVersion, out errorMessage))
+                    if (!this.TryInstallGVFSUpgrade(newGVFSVersion, out error))
                     {
                         return false;
                     }
@@ -228,18 +247,18 @@ namespace GVFS.Upgrader
             {
                 this.mount = false;
 
-                consoleError = errorMessage;
+                consoleError = error;
                 return false;
             }
 
             string postInstaller;
             Version postInstallerVersion;
-            if (this.upgrader.TryGetPostInstallerInfo(out postInstaller, out postInstallerVersion, out errorMessage))
+            if (this.upgrader.TryGetPostInstallerInfo(out postInstaller, out postInstallerVersion, out error))
             {
                 if (!this.LaunchInsideSpinner(
                 () =>
                 {
-                    if (!this.TryRunPostInstaller(postInstaller, postInstallerVersion, out errorMessage))
+                    if (!this.TryRunPostInstaller(postInstaller, postInstallerVersion, out error))
                     {
                         return false;
                     }
@@ -248,7 +267,7 @@ namespace GVFS.Upgrader
                 },
                 $"Running \"{postInstaller}\": {postInstallerVersion}"))
                 {
-                    consoleError = errorMessage;
+                    consoleError = error;
                     return false;
                 }
             }

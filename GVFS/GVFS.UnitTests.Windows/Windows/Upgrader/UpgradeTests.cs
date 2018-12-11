@@ -37,7 +37,7 @@ namespace GVFS.UnitTests.Windows.Upgrader
             this.Upgrader.PretendNewReleaseAvailableAtRemote(
                 upgradeVersion: NewerThanLocalVersion,
                 remoteRing: GitHubUpgrader.GitHubUpgraderConfig.RingType.Slow);
-            this.LocalConfig.TrySetConfig("upgrade.ring", "Slow", out _);
+            this.SetUpgradeRing("Slow");
         }
 
         [TestCase]
@@ -47,8 +47,7 @@ namespace GVFS.UnitTests.Windows.Upgrader
             this.ConfigureRunAndVerify(
                 configure: () =>
                 {
-                    this.LocalConfig.TrySetConfig("upgrade.ring", "None", out _);
-                    this.VerifyConfig(GitHubUpgrader.GitHubUpgraderConfig.RingType.None, isEnabled: true, isConfigured: true);
+                    this.SetUpgradeRing("None");
                 },
                 expectedReturn: ReturnCode.Success,
                 expectedOutput: new List<string>
@@ -81,7 +80,6 @@ namespace GVFS.UnitTests.Windows.Upgrader
         }
 
         [TestCase]
-
         [Category(CategoryConstants.ExceptionExpected)]
         public virtual void FetchReleaseInfo()
         {

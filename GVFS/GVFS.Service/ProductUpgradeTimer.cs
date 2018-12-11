@@ -54,14 +54,13 @@ namespace GVFS.Service
 
         private void TimerCallback(object unusedState)
         {
-            /*
             string errorMessage = null;
 
             InstallerPreRunChecker prerunChecker = new InstallerPreRunChecker(this.tracer, string.Empty);
             if (prerunChecker.TryRunPreUpgradeChecks(out string _) && !this.TryDownloadUpgrade(out errorMessage))
             {
                 this.tracer.RelatedError(errorMessage);
-            } */
+            }
         }
 
         private bool TryDownloadUpgrade(out string errorMessage)
